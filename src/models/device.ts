@@ -8,7 +8,7 @@ export interface DeviceModel {
 
 export interface Device {
     id?: string | number;
-    cfg_last_update?: string | null;
+    cfg_last_update?: string | undefined;
     customer: number;
     model: number;
     description: string;

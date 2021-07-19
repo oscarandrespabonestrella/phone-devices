@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Device, DeviceModel } from '../models/device';
-import { BASE_URL, AUTH_TOKEN} from "./config"
+import { BASE_URL, AUTH_TOKEN} from "./config/global_variables.d"
 
 const Headers = {'Authorization': `Token ${ AUTH_TOKEN}`}
 

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Dss } from '../models/dds';
 
-import { BASE_URL, AUTH_TOKEN} from "./config"
+import { BASE_URL, AUTH_TOKEN} from "./config/global_variables.d"
 
 const Headers = {'Authorization': `Token ${ AUTH_TOKEN}`}
 
