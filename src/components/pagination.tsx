@@ -25,7 +25,7 @@ const Pagination: React.FC<Props> = ({
       <PaginationBT.First onClick={() => handleFirstPage(items[0] + 1)} />
       <PaginationBT.Prev  onClick={() => handlePrevPage(currentPage)} />
         {items.map(item=>(
-          <PaginationBT.Item active={(item + 1)===currentPage} onClick={() => goToPage(item + 1)}>{item + 1}</PaginationBT.Item>
+          <PaginationBT.Item key={item} active={(item + 1)===currentPage} onClick={() => goToPage(item + 1)}>{item + 1}</PaginationBT.Item>
         ))}        
       <PaginationBT.Next onClick={() => handleNextPage(currentPage)} />
       <PaginationBT.Last onClick={() => handleLastPage(items[items.length - 1] + 1)} />

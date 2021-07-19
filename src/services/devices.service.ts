@@ -8,7 +8,7 @@ export default {
     getDevices: async () => {
         try {
             const response = await axios.get<Device[]>(`${BASE_URL}/api/devices`, {headers: Headers})
-            return response.data;
+            return response.data.sort((a, b) => a.id-b.id);
         } catch(error){
             throw error;
         }
@@ -23,7 +23,7 @@ export default {
     },
     createDevice: async (body: Device) => {
         try {
-            const response = await axios.post(`${BASE_URL}/api/devices`, {...body}, {headers: Headers})
+            const response = await axios.post(`${BASE_URL}/api/devices/`, {...body}, {headers: Headers})
             return response.data;
         } catch(error){
             throw error;
@@ -31,7 +31,7 @@ export default {
     },
     updateDevice: async (body: Device) => {
         try {
-            const response = await axios.put(`${BASE_URL}/api/devices/${body.id}`,{...body}, {headers: Headers})
+            const response = await axios.put(`${BASE_URL}/api/devices/${body.id}/`,{...body}, {headers: Headers})
             return response.data;
         } catch(error){
             throw error;
@@ -39,7 +39,7 @@ export default {
     },
     deleteDevice: async (id: number) => {
         try {
-            const response = await axios.delete(`${BASE_URL}/api/devices/${id}`, {headers: Headers})
+            const response = await axios.delete(`${BASE_URL}/api/devices/${id}/`, {headers: Headers})
             return response.data;
         } catch(error){
             throw error;

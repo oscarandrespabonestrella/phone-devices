@@ -1,5 +1,4 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React  from "react";
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -12,56 +11,72 @@ interface Props {
     device?: Device;
 }
 
-export default function DeviceModal(props: Props){    
-    const [state, setState] = React.useState<Device>({
-        id: 0,
-        customer: 0,
-        model: 0,
-        description: "",
-        mac: ""
-    });    
+class DeviceModal extends React.Component<Props, Device>{
+    constructor(props: Props) {
+        super(props);        
+        this.state = {
+            id:  undefined,
+            customer:  0,
+            model:  0,
+            description:  "",
+            mac: "",
+        }
+        this.handleChange = this.handleChange.bind(this);
+    }
     
-    if(props.device?.id){setState({...props.device})};
+    handleChange = (field: string) => (event) => {
+        this.setState({ [field]: event.target.value } as Pick<Device, any>);
+    }
 
-    const handleChange = (event) => {
-        this.setState({          
-          [event.target.name] : event.target.value
-        })
-      }
-    return (
-        <Modal show={props.show} onHide={props.handleClose}>
-            <Modal.Header closeButton>
-                <Modal.Title>{props.device?.id ? `Edit Device ${props.device.id}` : `Create new device`}</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Form>
-                    <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label>Customer</Form.Label>
-                        <Form.Control type="number" value={state.customer} onChange={handleChange} placeholder="Enter customer" />                        
-                    </Form.Group>
+    componentDidUpdate(nextProps){        
+        if(nextProps.device && nextProps.device.id !== this.props.device.id){
+            this.initForm(this.props.device);
+        }
+    }
 
-                    <Form.Group className="mb-3" controlId="formBasicPassword">
-                        <Form.Label>Model</Form.Label>
-                        <Form.Control type="number" value={state.model}  onChange={handleChange} placeholder="Enter model" />
-                    </Form.Group>
-                    <Form.Group className="mb-3" controlId="formBasicCheckbox">
-                        <Form.Label>Description</Form.Label>
-                        <Form.Control   value={state.description}  onChange={handleChange} as="textarea" rows={3} />
-                    </Form.Group>                    
-                </Form>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={props.handleClose}>
-                    Close
-                </Button>
-                <Button variant="primary" onClick={() => props.handleSave(state)}>
-                    Save Changes
-                </Button>
-            </Modal.Footer>
-        </Modal>
-    );
- 
+    
+
+    initForm(device: Device){        
+        this.setState({...device})
+    }
+
+    render(){
+        return (
+            <Modal show={this.props.show} onHide={this.props.handleClose}>
+                <Modal.Header closeButton>
+                    <Modal.Title>{this.props.device?.id ? `Edit Device ${this.props.device.id}` : `Create new device`}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3" controlId="formBasicEmail">
+                            <Form.Label>Customer</Form.Label>
+                            <Form.Control type="number" value={this.state.customer} onChange={this.handleChange("customer")} placeholder="Enter customer" />                        
+                        </Form.Group>
+    
+                        <Form.Group className="mb-3" controlId="formBasicPassword">
+                            <Form.Label>Model</Form.Label>
+                            <Form.Control type="number" value={this.state.model}  onChange={this.handleChange("model")} placeholder="Enter model" />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formBasicCheckbox">
+                            <Form.Label>Description</Form.Label>
+                            <Form.Control   value={this.state.description}  onChange={this.handleChange("description")} as="textarea" rows={3} />
+                        </Form.Group>                    
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={this.props.handleClose}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={() => this.props.handleSave(this.state)}>
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
 }
+
+export default DeviceModal;
 // const DeviceModal: React.FC<Props> = ({
 //     show,
 //     handleClose,

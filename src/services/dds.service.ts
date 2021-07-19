@@ -9,15 +9,15 @@ export default {
     getDssList: async () => {
         try {
             const response = await axios.get<Dss[]>(`${BASE_URL}/api/dss/`, {headers: Headers})
-            return response.data;
+            return response.data.sort((a, b) => a.id-b.id);
         } catch(error){
             throw error;
         }
     },
     getDssAssignToDevice: async (id: number) => {
         try {
-            const response = await axios.get<Dss[]>(`${BASE_URL}/api/dss?device=${id}`, {headers: Headers})
-            return response.data;
+            const response = await axios.get<Dss[]>(`${BASE_URL}/api/dss/?device=${id}`, {headers: Headers})
+            return response.data.sort((a, b) => a.id-b.id);
         } catch(error){
             throw error;
         }
@@ -32,7 +32,7 @@ export default {
     },
     updateDss: async (body: Dss) => {
         try {
-            const response = await axios.put(`${BASE_URL}/api/dss/${body.id}`,{...body}, {headers: Headers})
+            const response = await axios.put(`${BASE_URL}/api/dss/${body.id}/`,{...body}, {headers: Headers})
             return response.data;
         } catch(error){
             throw error;
