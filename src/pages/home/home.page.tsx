@@ -1,309 +1,411 @@
-import React from 'react';
+import React from "react";
 import { Link } from "react-router-dom";
-import Table from 'react-bootstrap/Table';
-import Button from 'react-bootstrap/Button';
+import Table from "react-bootstrap/Table";
+import Button from "react-bootstrap/Button";
 import SweetAlert from "react-bootstrap-sweetalert";
 import _ from "lodash";
-import Pagination from '../../components/pagination';
-import ActionButton from '../../components/action-button';
-import DeviceModal from '../../components/update-device-modal';
-import { Device } from '../../models/device';
-import DeviceService from '../../services/devices.service';
-import { VscEdit, VscError, VscRocket, VscSearch } from "react-icons/vsc";
+import Pagination from "../../components/pagination";
+import ActionButton from "../../components/action-button";
+import DeviceModal from "../../components/update-device-modal";
+import { Device } from "../../models/device";
+import DeviceService from "../../services/devices.service";
+import { VscEdit, VscError, VscRocket } from "react-icons/vsc";
 
+interface FormSeachType {
+  id: string;
+  customer: string;
+  model: string;
+  description: string;
+}
+
+interface HomeState {
+  page: number;
+  totalPages: number;
+  perPage: number;
+  offset: number;
+  devices: Device[];
+  devicesMirror: Device[];
+  devicesPage: Device[];
+  loading: boolean;
+  searchForm: FormSeachType;
+  showModal: boolean;
+  deleteObject: { id: number; show: boolean };
+  activeDevice: Device;
+}
+interface Props {}
 
 const defaultDevices: Device[] = [];
 
-export default function Home() {
-    const [state, setState] = React.useState({
-        page: 1,
-        totalPages: 0,
-        perPage: 10,
-        offset: 0,
-        devices: defaultDevices,
-        devicesMirror: defaultDevices,
-        devicesPage: defaultDevices,
-        loading: true
-    });
-
-    const [showModal, setShowModal] = React.useState(false);
-    const [showNotification, setShowNotification] = React.useState(false);
-    const [deleteObject, setDeleteObject] = React.useState({ id: null, show: false });
-    const [activeDevice, setActiveDevice] = React.useState({
+class Home extends React.Component<Props, HomeState> {
+  constructor(props) {
+    super(props);
+    this.state = {
+      page: 1,
+      totalPages: 0,
+      perPage: 10,
+      offset: 0,
+      devices: defaultDevices,
+      devicesMirror: defaultDevices,
+      devicesPage: defaultDevices,
+      loading: true,
+      searchForm: {
+        id: "",
+        customer: "",
+        model: "",
+        description: "",
+      },
+      showModal: false,
+      deleteObject: { id: null, show: false },
+      activeDevice: {
         customer: 0,
         model: 0,
         description: "",
-        mac: ""
-    })
-
-    const actionLinkStyle = {
-        cursor: "pointer"
-    }
-
-    React.useEffect(() => {
-        refreshDevices();
-    }, []);
-
-    const refreshDevices = () => {
-        DeviceService.getDevices()
-            .then((response) => {
-                setState(state => ({
-                    ...state,
-                    totalPages: Math.round(response.length / state.perPage),
-                    devices: response,
-                    devicesMirror: response,
-                    devicesPage: response.slice(state.offset, state.offset + state.perPage),
-                    loading: false
-                }));
-            })
-            .catch((error) => {
-                console.log(error)
-                setState(state => ({ ...state, loading: false }));
-            });
-    }
-
-    const handlePrevPage = (prevPage: number) => {
-        const offset = (prevPage - 1) * state.perPage;
-        setState(state => ({
-            ...state,
-            page: prevPage - 1,
-            offset: offset,
-            devicesPage: state.devices.slice(offset, offset + state.perPage)
-        }));
+        mac: "",
+      },
     };
+    this.handleSearchChange = this.handleSearchChange.bind(this);
+  }
 
-    const handleNextPage = (nextPage: number) => {
-        const offset = (nextPage + 1) * state.perPage;
-        setState(state => ({
-            ...state,
-            page: nextPage + 1,
-            offset: offset,
-            devicesPage: state.devices.slice(offset, offset + state.perPage)
+  actionLinkStyle = {
+    cursor: "pointer",
+  };
+  componentDidMount() {
+    this.refreshDevices();
+  }
+
+  refreshDevices = () => {
+    DeviceService.getDevices()
+      .then((response) => {
+        this.setState((state) => ({
+          ...state,
+          totalPages: Math.round(response.length / state.perPage),
+          devices: response,
+          devicesMirror: response,
+          devicesPage: response.slice(
+            state.offset,
+            state.offset + state.perPage
+          ),
+          loading: false,
         }));
-    };
+      })
+      .catch((error) => {
+        console.log(error);
+        this.setState((state) => ({ ...state, loading: false }));
+      });
+  };
 
-    const goToPage = (page: number) => {
-        const offset = page * state.perPage;
-        setState(state => ({
-            ...state,
-            page: page,
-            offset: offset,
-            devicesPage: state.devices.slice(offset, offset + state.perPage)
-        }));
-    };
+  handlePrevPage = (prevPage: number) => {
+    const offset = (prevPage - 1) * this.state.perPage;
+    this.setState((state) => ({
+      ...state,
+      page: prevPage - 1,
+      offset: offset,
+      devicesPage: state.devices.slice(offset, offset + state.perPage),
+    }));
+  };
 
-    const search = (value: string, field?: string) => {
-        if (value && field) {
-            const filtered = state.devicesMirror.filter(device => {
-                return field === 'description' ? device[field].toLowerCase().includes(value.toLowerCase()) :
-                    device[field] === parseInt(value);
-            });    
-            const devicesFiltered = _.intersectionWith(state.devices, filtered,  _.isEqual);
-            setState(state => ({
-                ...state,
-                page: 1,
-                offset: 0,
-                devices: devicesFiltered,
-                totalPages: Math.round(devicesFiltered.length / state.perPage),
-                devicesPage: devicesFiltered.length > state.perPage ? devicesFiltered.slice(0, state.perPage) : devicesFiltered
-            }));
-        } else {
-            setState(state => ({
-                ...state,
-                page: 1,
-                offset: 0,
-                devices: state.devicesMirror,
-                devicesPage: state.devicesMirror.slice(state.offset, state.offset + state.perPage),
-                totalPages: Math.round(state.devicesMirror.length / state.perPage)
-            }));
-        }
+  handleNextPage = (nextPage: number) => {
+    const offset = (nextPage + 1) * this.state.perPage;
+    this.setState((state) => ({
+      ...state,
+      page: nextPage + 1,
+      offset: offset,
+      devicesPage: state.devices.slice(offset, offset + state.perPage),
+    }));
+  };
 
-    }
+  goToPage = (page: number) => {
+    const offset = page * this.state.perPage;
+    this.setState((state) => ({
+      ...state,
+      page: page,
+      offset: offset,
+      devicesPage: state.devices.slice(offset, offset + state.perPage),
+    }));
+  };
 
-    const handleShowModal = (device?: Device) => {
-        if (device?.id) {
-            setActiveDevice({ ...device });
-            setShowModal(true);
-        } else {
-            setActiveDevice({
-                customer: 0,
-                model: 0,
-                description: "",
-                mac: ""
-            });
-            setShowModal(true);
-        }
-    }
-
-    const handleCloseModal = () => {
-        setShowModal(false);
-    }
-
-
-    const handleSave = (payload: Device) => {
-        const { cfg_last_update, ...body } = payload;
-        if (payload.id) {
-            DeviceService.updateDevice(body)
-                .then(() => {
-                    setShowNotification(true);
-                    refreshDevices();
-                    setShowModal(false);
-                })
-                .catch((error) => console.log(error))
-        } else {
-            const fakeMac = "XX:XX:XX:XX:XX:XX".replace(/X/g, function () {
-                return "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16))
-            })
-            DeviceService.createDevice({ ...body, mac: fakeMac })
-                .then(() => {
-                    refreshDevices();
-                    setShowModal(false);
-                })
-                .catch((error) => console.log(error))
-        }
-
-    }
-
-    const handleDelete = (id: number) => {
-        setDeleteObject({ id: id, show: true });
-    }
-
-    const deleteDevice = () => {
-        if (deleteObject.id) {
-            DeviceService.deleteDevice(deleteObject.id)
-                .then(() => {
-                    setShowNotification(true);
-                    refreshDevices();
-                    onCancelDelete();
-                })
-                .catch((error) => console.log(error))
-        }
-    }
-
-    const onCancelDelete = () => {
-        setDeleteObject({ id: null, show: false });
-    }
-
-
-
-
-    return (
-        <div className="row mt-4">
-            <div className="col">
-                <div className="row justify-content-between">
-                    <div className="col">
-                        <h2>Devices</h2>
-                    </div>
-                </div>
-                <hr />
-                <div className="row justify-content-between align-items-center">
-                    <div className="col-md-4 ">
-                        {/* <div className="input-group ">
-                            <input type="text" className="form-control" placeholder="Search" onChange={(e) => search(e.target.value)} />
-                        </div> */}
-                    </div>
-                    <div className="col-md-2 d-flex justify-content-end">
-                        <Button variant="primary" className="btn-block" onClick={() => handleShowModal()}>New Device</Button>
-                    </div>
-                </div>
-                <hr />
-                <div className="row">
-                    <div className="col">
-                        <Table striped bordered hover>
-                            <thead>
-                                <tr>
-                                    <th>id</th>
-                                    <th>Customer</th>
-                                    <th>Model</th>
-                                    <th>Description</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div className="input-group ">
-                                            <input type="text" className="form-control" placeholder="Search by Id" onChange={(e) => search(e.target.value, "id")} />
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="input-group ">
-                                            <input type="text" className="form-control" placeholder="Search by Customer" onChange={(e) => search(e.target.value, "customer")} />
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="input-group ">
-                                            <input type="text" className="form-control" placeholder="Search by Model" onChange={(e) => search(e.target.value, "model")} />
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="input-group ">
-                                            <input type="text" className="form-control" placeholder="Search by description" onChange={(e) => search(e.target.value, "description")} />
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                </tr>
-                                {state.devicesPage.map((device: Device) => (
-                                    <tr key={device.id}>
-                                        <td>{device.id}</td>
-                                        <td>{device.customer}</td>
-                                        <td>{device.model}</td>
-                                        <td>{device.description}</td>
-                                        <td className="d-flex justify-content-around">
-                                            <ActionButton title="Edit">
-                                                <a style={actionLinkStyle} onClick={() => handleShowModal(device)}><VscEdit /></a>
-                                            </ActionButton>
-                                            <ActionButton title="View Dss">
-                                                <Link to={`/${device.id}/dss`} title="View Dss"><VscRocket /></Link>
-                                            </ActionButton>
-                                            <ActionButton title="Delete">
-                                                <a style={actionLinkStyle} onClick={() => handleDelete(device.id)} title="Delete"><VscError /></a>
-                                            </ActionButton>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="col">
-                        {state.totalPages > 1 &&
-                            <Pagination
-                                totalPages={state.totalPages}
-                                currentPage={state.page}
-                                handlePrevPage={handlePrevPage}
-                                handleNextPage={handleNextPage}
-                                handleFirstPage={goToPage}
-                                handleLastPage={goToPage}
-                                goToPage={goToPage}
-                            />
-                        }
-                    </div>
-                </div>
-            </div>
-            <DeviceModal
-                show={showModal}
-                handleClose={handleCloseModal}
-                handleSave={handleSave}
-                device={activeDevice}
-            />
-            {
-                deleteObject.show && <SweetAlert
-                    warning
-                    showCancel
-                    confirmBtnText="Yes, delete it!"
-                    confirmBtnBsStyle="danger"
-                    title="Are you sure?"
-                    onConfirm={deleteDevice}
-                    onCancel={onCancelDelete}
-                    focusCancelBtn
-                >
-                    You will not be able to recover this device!
-                </SweetAlert>
-            }
-
-        </div>
-
+  handleSearchChange = (field: string) => (event) => {
+    this.setState(
+      {
+        searchForm: { ...this.state.searchForm, [field]: event.target.value },
+      } as Pick<Device, any>,
+      () => {
+        this.search();
+      }
     );
+  };
+
+  search = () => {
+    if (
+      this.state.searchForm.id !== "" ||
+      this.state.searchForm.model !== "" ||
+      this.state.searchForm.customer !== "" ||
+      this.state.searchForm.description !== ""
+    ) {
+      console.log("entre 2");
+      let filteredDevicesAux = this.state.devicesMirror;
+      Object.keys(this.state.searchForm).forEach((key, index) => {
+        const filtered = filteredDevicesAux.filter((device) => {
+          return ("" + device[key])
+            .toLowerCase()
+            .includes(this.state.searchForm[key].toLowerCase());
+        });
+
+        console.log(filtered);
+        filteredDevicesAux = [...filtered];
+      });
+
+      this.setState((state) => ({
+        ...state,
+        page: 1,
+        offset: 0,
+        devices: filteredDevicesAux,
+        totalPages: Math.round(filteredDevicesAux.length / state.perPage),
+        devicesPage:
+          filteredDevicesAux.length > state.perPage
+            ? filteredDevicesAux.slice(0, state.perPage)
+            : filteredDevicesAux,
+      }));
+    } else {
+      this.setState((state) => ({
+        ...state,
+        page: 1,
+        offset: 0,
+        devices: state.devicesMirror,
+        devicesPage: state.devicesMirror.slice(
+          state.offset,
+          state.offset + state.perPage
+        ),
+        totalPages: Math.round(state.devicesMirror.length / state.perPage),
+      }));
+    }
+  };
+
+  handleShowModal = (device?: Device) => {
+    if (device?.id) {
+      this.setState({ activeDevice: { ...device }, showModal: true });
+    } else {
+      this.setState({
+        activeDevice: {
+          customer: 0,
+          model: 0,
+          description: "",
+          mac: "",
+        },
+        showModal: true,
+      });
+    }
+  };
+
+  handleCloseModal = () => {
+    this.setState({ showModal: false });
+  };
+
+  handleSave = (payload: Device) => {
+    const { cfg_last_update, ...body } = payload;
+    if (payload.id) {
+      DeviceService.updateDevice(body)
+        .then(() => {
+          this.refreshDevices();
+          this.setState({ showModal: false });
+        })
+        .catch((error) => console.log(error));
+    } else {
+      const fakeMac = "XX:XX:XX:XX:XX:XX".replace(/X/g, function () {
+        return "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16));
+      });
+      DeviceService.createDevice({ ...body, mac: fakeMac })
+        .then(() => {
+          this.refreshDevices();
+          this.setState({ showModal: false });
+        })
+        .catch((error) => console.log(error));
+    }
+  };
+
+  handleDelete = (id: number) => {
+    this.setState({ deleteObject: { id: id, show: true } });
+  };
+
+  deleteDevice = () => {
+    if (this.state.deleteObject?.id) {
+      DeviceService.deleteDevice(this.state.deleteObject.id)
+        .then(() => {
+          this.refreshDevices();
+          this.onCancelDelete();
+        })
+        .catch((error) => console.log(error));
+    }
+  };
+
+  onCancelDelete = () => {
+    this.setState({ deleteObject: { id: null, show: false } });
+  };
+
+  render() {
+    return (
+      <div className="row mt-4">
+        <div className="col">
+          <div className="row justify-content-between">
+            <div className="col">
+              <h2>Devices</h2>
+            </div>
+          </div>
+          <hr />
+          <div className="row justify-content-between align-items-center">
+            <div className="col-md-4 "></div>
+            <div className="col-md-2 d-flex justify-content-end">
+              <Button
+                variant="primary"
+                className="btn-block"
+                onClick={() => this.handleShowModal()}
+              >
+                New Device
+              </Button>
+            </div>
+          </div>
+          <hr />
+          <div className="row">
+            <div className="col">
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>Customer</th>
+                    <th>Model</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div className="input-group ">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search by Id"
+                          value={this.state.searchForm.id}
+                          onChange={this.handleSearchChange("id")}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="input-group ">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search by Customer"
+                          onChange={this.handleSearchChange("customer")}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="input-group ">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search by Model"
+                          onChange={this.handleSearchChange("model")}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="input-group ">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search by description"
+                          onChange={this.handleSearchChange("description")}
+                        />
+                      </div>
+                    </td>
+                    <td></td>
+                  </tr>
+                  {this.state.devicesPage.map((device: Device) => (
+                    <tr key={device.id}>
+                      <td>{device.id}</td>
+                      <td>{device.customer}</td>
+                      <td>{device.model}</td>
+                      <td>{device.description}</td>
+                      <td className="d-flex justify-content-around">
+                        <ActionButton title="Edit">
+                          <a
+                            style={this.actionLinkStyle}
+                            onClick={() => this.handleShowModal(device)}
+                          >
+                            <VscEdit />
+                          </a>
+                        </ActionButton>
+                        <ActionButton title="View Dss">
+                          <Link to={`/${device.id}/dss`} title="View Dss">
+                            <VscRocket />
+                          </Link>
+                        </ActionButton>
+                        <ActionButton title="Delete">
+                          <a
+                            style={this.actionLinkStyle}
+                            onClick={() => this.handleDelete(device.id)}
+                            title="Delete"
+                          >
+                            <VscError />
+                          </a>
+                        </ActionButton>
+                      </td>
+                    </tr>
+                  ))}
+                  {this.state.devicesPage.length === 0 && (
+                    <tr>
+                      <td colSpan={5}>
+                        <p className="justify-content-center d-flex mt-3">
+                          Not Results
+                        </p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col">
+              {this.state.totalPages > 1 && (
+                <Pagination
+                  totalPages={this.state.totalPages}
+                  currentPage={this.state.page}
+                  handlePrevPage={this.handlePrevPage}
+                  handleNextPage={this.handleNextPage}
+                  handleFirstPage={this.goToPage}
+                  handleLastPage={this.goToPage}
+                  goToPage={this.goToPage}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+        <DeviceModal
+          show={this.state.showModal}
+          handleClose={this.handleCloseModal}
+          handleSave={this.handleSave}
+          device={this.state.activeDevice}
+        />
+        {this.state.deleteObject.show && (
+          <SweetAlert
+            warning
+            showCancel
+            confirmBtnText="Yes, delete it!"
+            confirmBtnBsStyle="danger"
+            title="Are you sure?"
+            onConfirm={this.deleteDevice}
+            onCancel={this.onCancelDelete}
+            focusCancelBtn
+          >
+            You will not be able to recover this device!
+          </SweetAlert>
+        )}
+      </div>
+    );
+  }
 }
+
+export default Home;
