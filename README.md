@@ -1,6 +1,6 @@
 # Phone device Test
 
-[Live Demo] (https://condescending-galileo-67105d.netlify.app)
+[Live Demo](https://condescending-galileo-67105d.netlify.app)
 
 ## Available Scripts
 
