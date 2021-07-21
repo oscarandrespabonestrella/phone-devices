@@ -19,7 +19,7 @@ const Pagination: React.FC<Props> = ({
   handleLastPage,
   goToPage
 }) => {
-  const items = Array.from(Array(totalPages).keys());
+  const items = Array.from(Array(Math.round(totalPages)).keys());
   return (
     <PaginationBT>      
       <PaginationBT.First onClick={() => handleFirstPage(items[0] + 1)} />

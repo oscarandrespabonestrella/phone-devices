@@ -8,6 +8,7 @@ import Pagination from "../../components/pagination";
 import DssModal from "../../components/update-dss-modal";
 import DssService from "../../services/dds.service";
 import { Dss } from "../../models/dds";
+import { TotalPages } from "../../utils/utils";
 
 const defaultDss: Dss[] = [];
 const emptyDss: Dss = {
@@ -45,7 +46,7 @@ export default function DssPage() {
       .then((response: Dss[]) => {
         setState((state) => ({
           ...state,
-          totalPages: Math.round(response.length / state.perPage),
+          totalPages: TotalPages(response.length, state.perPage),
           dss: response,
           dssPage: response.slice(state.offset, state.offset + state.perPage),
         }));
@@ -56,32 +57,24 @@ export default function DssPage() {
   };
 
   const handlePrevPage = (prevPage: number) => {
-    const offset = (prevPage - 1) * state.perPage;
-    setState((state) => ({
-      ...state,
-      page: prevPage - 1,
-      offset: offset,
-      devicesPage: state.dss.slice(offset, offset + state.perPage),
-    }));
+    if(prevPage > 1){
+      goToPage(prevPage - 1);
+    }
   };
 
   const handleNextPage = (nextPage: number) => {
-    const offset = (nextPage + 1) * state.perPage;
-    setState((state) => ({
-      ...state,
-      page: nextPage + 1,
-      offset: offset,
-      dssPage: state.dss.slice(offset, offset + state.perPage),
-    }));
+    if(nextPage < state.totalPages){
+      goToPage(nextPage + 1);      
+    }
   };
 
-  const goToPage = (page: number) => {
-    const offset = page * state.perPage;
-    setState((state) => ({
-      ...state,
+  const goToPage = (page: number) => {    
+    const offset = (page-1) * state.perPage;
+    setState((internalState) => ({
+      ...internalState,
       page: page,
       offset: offset,
-      dssPage: state.dss.slice(offset, offset + state.perPage),
+      dssPage: internalState.dss.slice(offset, offset + internalState.perPage),
     }));
   };
 
@@ -120,7 +113,6 @@ export default function DssPage() {
   };
 
   const handleSave = (payload: Dss) => {
-    //   const { cfg_last_update, ...body } = payload;
     if (payload.id) {
       DssService.updateDss(payload)
         .then(() => {
@@ -145,7 +137,7 @@ export default function DssPage() {
           <div className="col">
             <h2>Dss for device {deviceId}</h2>
           </div>
-          <div className="col-md-2 text-right">
+          <div className="col-md-2 d-flex justify-content-end">
             <Button
               variant="primary"
               className="btn-block"

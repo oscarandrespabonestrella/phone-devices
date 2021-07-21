@@ -10,6 +10,7 @@ import DeviceModal from "../../components/update-device-modal";
 import { Device } from "../../models/device";
 import DeviceService from "../../services/devices.service";
 import { VscEdit, VscError, VscRocket } from "react-icons/vsc";
+import { TotalPages} from "../../utils/utils";
 
 interface FormSeachType {
   id: string;
@@ -78,7 +79,7 @@ class Home extends React.Component<Props, HomeState> {
       .then((response) => {
         this.setState((state) => ({
           ...state,
-          totalPages: Math.round(response.length / state.perPage),
+          totalPages: TotalPages (response.length, state.perPage),
           devices: response,
           devicesMirror: response,
           devicesPage: response.slice(
@@ -95,27 +96,19 @@ class Home extends React.Component<Props, HomeState> {
   };
 
   handlePrevPage = (prevPage: number) => {
-    const offset = (prevPage - 1) * this.state.perPage;
-    this.setState((state) => ({
-      ...state,
-      page: prevPage - 1,
-      offset: offset,
-      devicesPage: state.devices.slice(offset, offset + state.perPage),
-    }));
+    if(prevPage > 1){
+      this.goToPage(prevPage - 1);      
+    }
   };
 
   handleNextPage = (nextPage: number) => {
-    const offset = (nextPage + 1) * this.state.perPage;
-    this.setState((state) => ({
-      ...state,
-      page: nextPage + 1,
-      offset: offset,
-      devicesPage: state.devices.slice(offset, offset + state.perPage),
-    }));
+    if(nextPage < this.state.totalPages){
+      this.goToPage(nextPage + 1);
+    }
   };
 
   goToPage = (page: number) => {
-    const offset = page * this.state.perPage;
+    const offset = (page-1) * this.state.perPage;
     this.setState((state) => ({
       ...state,
       page: page,
@@ -141,8 +134,7 @@ class Home extends React.Component<Props, HomeState> {
       this.state.searchForm.model !== "" ||
       this.state.searchForm.customer !== "" ||
       this.state.searchForm.description !== ""
-    ) {
-      console.log("entre 2");
+    ) {      
       let filteredDevicesAux = this.state.devicesMirror;
       Object.keys(this.state.searchForm).forEach((key, index) => {
         const filtered = filteredDevicesAux.filter((device) => {
@@ -150,8 +142,6 @@ class Home extends React.Component<Props, HomeState> {
             .toLowerCase()
             .includes(this.state.searchForm[key].toLowerCase());
         });
-
-        console.log(filtered);
         filteredDevicesAux = [...filtered];
       });
 
@@ -160,7 +150,7 @@ class Home extends React.Component<Props, HomeState> {
         page: 1,
         offset: 0,
         devices: filteredDevicesAux,
-        totalPages: Math.round(filteredDevicesAux.length / state.perPage),
+        totalPages: TotalPages(filteredDevicesAux.length, state.perPage),
         devicesPage:
           filteredDevicesAux.length > state.perPage
             ? filteredDevicesAux.slice(0, state.perPage)
@@ -176,7 +166,7 @@ class Home extends React.Component<Props, HomeState> {
           state.offset,
           state.offset + state.perPage
         ),
-        totalPages: Math.round(state.devicesMirror.length / state.perPage),
+        totalPages: TotalPages(state.devicesMirror.length, state.perPage),
       }));
     }
   };
