@@ -37,9 +37,9 @@ export default function DssPage() {
     show: false,
   });
 
-  React.useEffect(() => {
-    refreshDss();
-  }, []);
+  // eslint-disable-next-line
+  React.useEffect(() => {refreshDss()}, []);
+ 
 
   const refreshDss = () => {
     DssService.getDssAssignToDevice(state.activeDevice)
@@ -55,6 +55,8 @@ export default function DssPage() {
         console.log(error);
       });
   };
+
+  
 
   const handlePrevPage = (prevPage: number) => {
     if(prevPage > 1){

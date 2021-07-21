@@ -3,20 +3,20 @@ import { Link } from "react-router-dom";
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import SweetAlert from "react-bootstrap-sweetalert";
-import _ from "lodash";
 import Pagination from "../../components/pagination";
 import ActionButton from "../../components/action-button";
 import DeviceModal from "../../components/update-device-modal";
 import { Device } from "../../models/device";
 import DeviceService from "../../services/devices.service";
 import { VscEdit, VscError, VscRocket } from "react-icons/vsc";
-import { TotalPages} from "../../utils/utils";
+import { TotalPages } from "../../utils/utils";
 
 interface FormSeachType {
   id: string;
   customer: string;
   model: string;
   description: string;
+  mac: string;
 }
 
 interface HomeState {
@@ -33,7 +33,7 @@ interface HomeState {
   deleteObject: { id: number; show: boolean };
   activeDevice: Device;
 }
-interface Props {}
+interface Props { }
 
 const defaultDevices: Device[] = [];
 
@@ -54,6 +54,7 @@ class Home extends React.Component<Props, HomeState> {
         customer: "",
         model: "",
         description: "",
+        mac: ""
       },
       showModal: false,
       deleteObject: { id: null, show: false },
@@ -79,7 +80,7 @@ class Home extends React.Component<Props, HomeState> {
       .then((response) => {
         this.setState((state) => ({
           ...state,
-          totalPages: TotalPages (response.length, state.perPage),
+          totalPages: TotalPages(response.length, state.perPage),
           devices: response,
           devicesMirror: response,
           devicesPage: response.slice(
@@ -96,19 +97,19 @@ class Home extends React.Component<Props, HomeState> {
   };
 
   handlePrevPage = (prevPage: number) => {
-    if(prevPage > 1){
-      this.goToPage(prevPage - 1);      
+    if (prevPage > 1) {
+      this.goToPage(prevPage - 1);
     }
   };
 
   handleNextPage = (nextPage: number) => {
-    if(nextPage < this.state.totalPages){
+    if (nextPage < this.state.totalPages) {
       this.goToPage(nextPage + 1);
     }
   };
 
   goToPage = (page: number) => {
-    const offset = (page-1) * this.state.perPage;
+    const offset = (page - 1) * this.state.perPage;
     this.setState((state) => ({
       ...state,
       page: page,
@@ -133,8 +134,9 @@ class Home extends React.Component<Props, HomeState> {
       this.state.searchForm.id !== "" ||
       this.state.searchForm.model !== "" ||
       this.state.searchForm.customer !== "" ||
-      this.state.searchForm.description !== ""
-    ) {      
+      this.state.searchForm.description !== "" || 
+      this.state.searchForm.mac !== ""
+    ) {
       let filteredDevicesAux = this.state.devicesMirror;
       Object.keys(this.state.searchForm).forEach((key, index) => {
         const filtered = filteredDevicesAux.filter((device) => {
@@ -200,11 +202,8 @@ class Home extends React.Component<Props, HomeState> {
           this.setState({ showModal: false });
         })
         .catch((error) => console.log(error));
-    } else {
-      const fakeMac = "XX:XX:XX:XX:XX:XX".replace(/X/g, function () {
-        return "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16));
-      });
-      DeviceService.createDevice({ ...body, mac: fakeMac })
+    } else {     
+      DeviceService.createDevice({ ...body })
         .then(() => {
           this.refreshDevices();
           this.setState({ showModal: false });
@@ -263,6 +262,7 @@ class Home extends React.Component<Props, HomeState> {
                     <th>id</th>
                     <th>Customer</th>
                     <th>Model</th>
+                    <th>Mac address:</th>
                     <th>Description</th>
                     <th>Actions</th>
                   </tr>
@@ -305,6 +305,16 @@ class Home extends React.Component<Props, HomeState> {
                         <input
                           type="text"
                           className="form-control"
+                          placeholder="Search by Mac"
+                          onChange={this.handleSearchChange("mac")}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="input-group ">
+                        <input
+                          type="text"
+                          className="form-control"
                           placeholder="Search by description"
                           onChange={this.handleSearchChange("description")}
                         />
@@ -317,29 +327,32 @@ class Home extends React.Component<Props, HomeState> {
                       <td>{device.id}</td>
                       <td>{device.customer}</td>
                       <td>{device.model}</td>
+                      <td>{device.mac}</td>
                       <td>{device.description}</td>
                       <td className="d-flex justify-content-around">
                         <ActionButton title="Edit">
-                          <a
+                          <Button variant="link"
                             style={this.actionLinkStyle}
                             onClick={() => this.handleShowModal(device)}
                           >
                             <VscEdit />
-                          </a>
+                          </Button>
                         </ActionButton>
                         <ActionButton title="View Dss">
-                          <Link to={`/${device.id}/dss`} title="View Dss">
-                            <VscRocket />
-                          </Link>
+                          <Button variant="link">
+                            <Link to={`/${device.id}/dss`} title="View Dss">
+                              <VscRocket />
+                            </Link>
+                          </Button>
                         </ActionButton>
                         <ActionButton title="Delete">
-                          <a
+                          <Button variant="link"
                             style={this.actionLinkStyle}
                             onClick={() => this.handleDelete(device.id)}
                             title="Delete"
                           >
                             <VscError />
-                          </a>
+                          </Button>
                         </ActionButton>
                       </td>
                     </tr>

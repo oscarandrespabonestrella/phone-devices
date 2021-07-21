@@ -40,3 +40,13 @@
 .sr-only{
   display: none;
 }
+
+.modal .modal-header button.close{
+  background: none;
+  border: none;
+  font-size: 1.5em;
+}
+
+.modal .modal-header button.close :hover{
+  color: #0d6efd ;
+}

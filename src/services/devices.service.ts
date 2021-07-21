@@ -4,6 +4,7 @@ import { BASE_URL, AUTH_TOKEN} from "./config/global_variables.d"
 
 const Headers = {'Authorization': `Token ${ AUTH_TOKEN}`}
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
     getDevices: async () => {
         try {

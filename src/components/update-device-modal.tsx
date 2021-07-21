@@ -69,6 +69,15 @@ class DeviceModal extends React.Component<Props, Device> {
                 placeholder="Enter model"
               />
             </Form.Group>
+            <Form.Group className="mb-3" controlId="formBasicPassword">
+              <Form.Label>Mac address</Form.Label>
+              <Form.Control
+                type="text"
+                value={this.state.mac}
+                onChange={this.handleChange("mac")}
+                placeholder="Enter Mac address"
+              />
+            </Form.Group>
             <Form.Group className="mb-3" controlId="formBasicCheckbox">
               <Form.Label>Description</Form.Label>
               <Form.Control
